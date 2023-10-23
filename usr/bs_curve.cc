@@ -622,7 +622,8 @@ static int bs_curve_open(struct scsi_lu *lu, char *dev, int *fd, uint64_t *size)
 	 
 	auto retCode= g_curve->StatFile(info->curve_fd, &fileStatinfo);
 	if (retCode != LIBCURVE_ERROR::OK) {
-        LOG(ERROR) << "Stat file failed, retCode = " << retCode;
+        // LOG(ERROR) << "Stat file failed, retCode = " << retCode;
+		eprintf("Stat file failed, retCode = %d\n", retCode);
         return false;
     }
 	curve_size = fileStatinfo.length;
@@ -729,7 +730,20 @@ static void bs_curve_exit(struct scsi_lu *lu)
 static int bs_curve_getlength(struct scsi_lu *lu, uint64_t *size)
 {
 	struct bs_curve_info *info = BS_CURVE_I(lu);
-	int64_t curve_size = g_curve->StatFile(info->curve_name);
+	OpenFlags openflags;
+	openflags.exclusive = false;
+	info->curve_fd = g_curve->Open(info->curve_name, openflags);
+	if (info->curve_fd < 0) {
+		eprintf("can not open curve volume %s, %s\n", path, strerror(errno));
+		return -1;
+	}
+	auto retCode= g_curve->StatFile(info->curve_fd, &fileStatinfo);
+	if (retCode != LIBCURVE_ERROR::OK) {
+        // LOG(ERROR) << "Stat file failed, retCode = " << retCode;
+		eprintf("Stat file failed, retCode = %d\n", retCode);
+        return false;
+    }
+	int64_t curve_size = fileStatinfo.length;//= g_curve->StatFile(info->curve_name);
 	if (curve_size >= 0) {
 		*size = curve_size;
 		return 0;
