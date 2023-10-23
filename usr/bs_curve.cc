@@ -618,8 +618,14 @@ static int bs_curve_open(struct scsi_lu *lu, char *dev, int *fd, uint64_t *size)
 		return -1;
 	}
 	blksize = 4096; //FIXME
-
-	curve_size = g_curve->StatFile(path);
+	FileStatInfo fileStatinfo;
+	 
+	auto retCode= g_curve->StatFile(info->curve_fd, &fileStatinfo);
+	if (retCode != LIBCURVE_ERROR::OK) {
+        LOG(ERROR) << "Stat file failed, retCode = " << retCode;
+        return false;
+    }
+	curve_size = fileStatinfo.length;
 	if (curve_size < 0) {
 		g_curve->Close(info->curve_fd);
         	info->curve_fd = -1;
