@@ -734,9 +734,10 @@ static int bs_curve_getlength(struct scsi_lu *lu, uint64_t *size)
 	openflags.exclusive = false;
 	info->curve_fd = g_curve->Open(info->curve_name, openflags);
 	if (info->curve_fd < 0) {
-		eprintf("can not open curve volume %s, %s\n", path, strerror(errno));
+		eprintf("can not open curve volume %s, %s\n", info->curve_name, strerror(errno));
 		return -1;
 	}
+	FileStatInfo fileStatinfo;
 	auto retCode= g_curve->StatFile(info->curve_fd, &fileStatinfo);
 	if (retCode != LIBCURVE_ERROR::OK) {
         // LOG(ERROR) << "Stat file failed, retCode = " << retCode;
